@@ -7,77 +7,125 @@ A tutorial project for learning Flask and related technologies, including Celery
 - **Application Factory Pattern** — Clean, scalable Flask architecture
 - **Celery Integration** — Asynchronous task processing with Redis broker
 - **Connexion + Swagger** — OpenAPI 3.0 specification with interactive API documentation
-- **Environment-based Config** — Separate configs for dev/prod/testing
+- **Environment-based Config** — Separate configurations for development, production, and testing
 - **Flask-SQLAlchemy** — Database models with Alembic migrations
 - **Flask-Caching** — Built-in caching support
+- **JWT Authentication** — Secure API authentication
+- **Docker Support** — Containerized deployment with Docker Compose
 
-## Quick Start
-
-### Prerequisites
+## Prerequisites
 
 - Python 3.10+
 - Redis server (or Docker)
-- Docker & Docker Compose (for Docker deployment)
+- Docker & Docker Compose (optional, for containerized deployment)
+- Poetry (for dependency management)
 
-### Setup
+## Installation
 
-1. **Create virtual environment:**
-   ```bash
-   python -m venv .venv
-   .venv\Scripts\Activate  # Windows
-   source .venv/bin/activate  # macOS/Linux
-   ```
-
-2. **Install Poetry inside the project venv (keeps everything self-contained):**
-   ```bash
-   pip install poetry
-   ```
-
-3. **Tell Poetry to reuse the existing `.venv` interpreter:**
-   ```bash
-   poetry env use .venv\Scripts\python.exe      # Windows
-   poetry env use .venv/bin/python              # macOS/Linux
-   ```
-
-4. **Install dependencies via Poetry:**
-   ```bash
-   poetry install
-   ```
-
-5. **Configure environment variables:**
-   ```bash
-   # Copy the example .env file
-   cp .env.example .env
-   
-   # Edit .env file and set SECRET_KEY (required)
-   # Generate a secure key: python -c "import secrets; print(secrets.token_urlsafe(32))"
-   ```
-
-6. **Start Redis:**
-   ```bash
-   # Using Docker (recommended)
-   docker run -d --name redis-local -p 6379:6379 redis:7
-   ```
-
-5. **Run database migrations:**
-   ```bash
-   alembic upgrade head
-   ```
-
-### Running the Application
-
-**Development Mode:**
+### 1. Clone the Repository
 
 ```bash
-# Terminal 1: Flask application
-python wsgi.py
-
-# Terminal 2: Celery worker
-celery -A app.celery_app worker --loglevel=info --pool=solo  # Windows
-celery -A app.celery_app worker --loglevel=info  # macOS/Linux
+git clone <repository-url>
+cd flask_tutorial
 ```
 
-**Production Mode:**
+### 2. Set Up Virtual Environment
+
+```bash
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+# Windows
+.venv\Scripts\Activate
+# macOS/Linux
+source .venv/bin/activate
+```
+
+### 3. Install Poetry
+
+```bash
+pip install poetry
+```
+
+### 4. Configure Poetry to Use Existing Virtual Environment
+
+```bash
+# Windows
+poetry env use .venv\Scripts\python.exe
+# macOS/Linux
+poetry env use .venv/bin/python
+```
+
+### 5. Install Dependencies
+
+```bash
+poetry install
+```
+
+### 6. Configure Environment Variables
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+```
+
+Edit `.env` file and set required variables:
+
+```env
+# Required: Generate a secure secret key
+# Generate one: python -c "import secrets; print(secrets.token_urlsafe(32))"
+SECRET_KEY=your-secret-key-here
+
+# Optional: JWT secret (defaults to SECRET_KEY if not set)
+JWT_SECRET_KEY=
+
+# Database (SQLite for development, PostgreSQL for production)
+DATABASE_URL=sqlite:///instance/db/test.db
+
+# Redis configuration
+CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
+```
+
+### 7. Start Redis
+
+```bash
+# Using Docker (recommended)
+docker run -d --name redis-local -p 6379:6379 redis:7
+
+# Or use a local Redis installation
+```
+
+### 8. Run Database Migrations
+
+```bash
+alembic upgrade head
+```
+
+## Running the Application
+
+### Development Mode
+
+Run the application in development mode:
+
+```bash
+# Terminal 1: Start Flask application
+python wsgi.py
+
+# Terminal 2: Start Celery worker
+# Windows
+celery -A app.celery_app worker --loglevel=info --pool=solo
+# macOS/Linux
+celery -A app.celery_app worker --loglevel=info
+```
+
+The application will be available at:
+- **API**: http://localhost:5000/api
+- **Swagger UI**: http://localhost:5000/api/ui
+- **OpenAPI JSON**: http://localhost:5000/api/openapi.json
+
+### Production Mode
 
 ```bash
 # Using uvicorn
@@ -91,67 +139,66 @@ gunicorn wsgi:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:5000
 
 ### Using Docker Compose (Recommended)
 
-**快速启动所有服务（Flask + Celery + Redis）：**
+**Start all services (Flask + Celery + Redis):**
 
 ```bash
-# 1. 复制环境变量文件（可选）
+# 1. Copy environment file (optional)
 cp .env.example .env
-# 编辑 .env 文件设置你的配置
+# Edit .env file with your configuration
 
-# 2. 构建并启动所有服务
+# 2. Build and start all services
 docker-compose up -d
 
-# 3. 查看日志
+# 3. View logs
 docker-compose logs -f
 
-# 4. 停止服务
+# 4. Stop services
 docker-compose down
 
-# 5. 停止并删除数据卷（清理数据）
+# 5. Stop and remove volumes (clean data)
 docker-compose down -v
 ```
 
-**启动特定服务：**
+**Start specific services:**
 
 ```bash
-# 只启动 Redis
+# Start only Redis
 docker-compose up -d redis
 
-# 启动 Flask 和 Redis（不启动 Celery worker）
+# Start Flask and Redis (without Celery worker)
 docker-compose up -d redis web
 
-# 启动 Celery Beat（定时任务，需要额外指定 profile）
+# Start Celery Beat (scheduled tasks, requires profile)
 docker-compose --profile beat up -d celery-beat
 ```
 
-**查看服务状态：**
+**Check service status:**
 
 ```bash
 docker-compose ps
 ```
 
-**执行数据库迁移：**
+**Run database migrations:**
 
 ```bash
-# 在 web 容器中执行
 docker-compose exec web alembic upgrade head
 ```
 
 ### Using Docker Only
 
-**构建镜像：**
+**Build the image:**
 
 ```bash
-docker build -t flask-celery-poc:latest .
+docker build -t flask-tutorial:latest .
 ```
 
-**运行容器：**
+**Run containers:**
 
 ```bash
-# 1. 启动 Redis（如果还没有）
+# 1. Start Redis (if not already running)
 docker run -d --name redis -p 6379:6379 redis:7-alpine
 
-# 2. 运行 Flask 应用
+# 2. Run Flask application
 docker run -d \
   --name flask-app \
   -p 5000:5000 \
@@ -162,9 +209,9 @@ docker run -d \
   -e CELERY_BROKER_URL=redis://redis:6379/0 \
   -e CELERY_RESULT_BACKEND=redis://redis:6379/1 \
   -v $(pwd)/instance:/app/instance \
-  flask-celery-poc:latest
+  flask-tutorial:latest
 
-# 3. 运行 Celery Worker
+# 3. Run Celery Worker
 docker run -d \
   --name celery-worker \
   --link redis:redis \
@@ -174,14 +221,13 @@ docker run -d \
   -e CELERY_BROKER_URL=redis://redis:6379/0 \
   -e CELERY_RESULT_BACKEND=redis://redis:6379/1 \
   -v $(pwd)/instance:/app/instance \
-  flask-celery-poc:latest \
+  flask-tutorial:latest \
   celery -A app.celery_app worker --loglevel=info
 ```
 
-**Windows PowerShell 示例：**
+**Windows PowerShell example:**
 
 ```powershell
-# 运行 Flask 应用
 docker run -d `
   --name flask-app `
   -p 5000:5000 `
@@ -192,91 +238,54 @@ docker run -d `
   -e CELERY_BROKER_URL=redis://redis:6379/0 `
   -e CELERY_RESULT_BACKEND=redis://redis:6379/1 `
   -v ${PWD}/instance:/app/instance `
-  flask-celery-poc:latest
+  flask-tutorial:latest
 ```
 
-### Docker 服务说明
+### Docker Services
 
-- **web**: Flask 应用服务，运行在 5000 端口
-- **celery-worker**: Celery 工作进程，处理异步任务
-- **celery-beat**: Celery 定时任务调度器（可选，使用 `--profile beat` 启动）
-- **redis**: Redis 服务，用作 Celery broker 和结果后端
-
-### 本地开发 vs Docker
-
-**本地开发：**
-```bash
-python wsgi.py  # 直接运行
-```
-
-**Docker 部署：**
-```bash
-docker-compose up -d  # 或 docker run ...
-```
-
-两种方式可以并存，互不影响。
-
-## Testing
-
-- Install dev dependencies (already handled if you ran `poetry install` with the default groups).
-- Run pytest through Poetry to ensure it uses the managed virtualenv:
-
-```bash
-poetry run pytest
-poetry run pytest --cov  # include coverage report
-```
-
-Tests live under `tests/` with fixtures in `tests/conftest.py` so you can add new modules per domain (`test_tasks.py`, `test_users.py`, etc.).
-
-### Access Points
-
-- **API**: http://localhost:5000/api
-- **Swagger UI**: http://localhost:5000/api/ui
-- **OpenAPI JSON**: http://localhost:5000/api/openapi.json
+- **web**: Flask application service, runs on port 5000
+- **celery-worker**: Celery worker process for handling asynchronous tasks
+- **celery-beat**: Celery scheduled task scheduler (optional, start with `--profile beat`)
+- **redis**: Redis service used as Celery broker and result backend
 
 ## API Endpoints
 
-- `GET /api/ping` - Health check
-- `GET /api/add/{x}/{y}` - Trigger async add task
+- `GET /api/ping` - Health check endpoint
+- `GET /api/add/{x}/{y}` - Trigger asynchronous addition task
 - `GET /api/task?task_id={id}` - Check task status
-- `POST /api/add_user` - Create user (JSON body or query params)
+- `POST /api/add_user` - Create a new user (JSON body or query parameters)
 - `GET /api/user/{user_id}` - Get user data (cached)
+
+For interactive API documentation, visit: http://localhost:5000/api/ui
+
+## Testing
+
+Run tests using pytest:
+
+```bash
+# Run all tests
+poetry run pytest
+
+# Run with coverage report
+poetry run pytest --cov
+
+# Run specific test file
+poetry run pytest tests/test_users.py
+```
+
+Tests are located in the `tests/` directory with fixtures defined in `tests/conftest.py`.
 
 ## Environment Variables
 
-The application uses `.env` file for configuration. Both `python wsgi.py` and `docker-compose` will automatically load environment variables from `.env` file.
-
-**Setup:**
-
-1. **Copy the example file:**
-   ```bash
-   cp .env.example .env
-   ```
-
-2. **Edit `.env` file and set your configuration:**
-   ```env
-   # Required: Generate a secure secret key
-   # You can generate one using: python -c "import secrets; print(secrets.token_urlsafe(32))"
-   SECRET_KEY=your-secret-key-here
-   
-   # Optional: JWT secret (defaults to SECRET_KEY if not set)
-   JWT_SECRET_KEY=
-   
-   # Database (SQLite for development, PostgreSQL for production)
-   DATABASE_URL=sqlite:///instance/db/test.db
-   
-   # Redis configuration
-   CELERY_BROKER_URL=redis://127.0.0.1:6379/0
-   CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
-   ```
+The application uses a `.env` file for configuration. Both `python wsgi.py` and `docker-compose` automatically load environment variables from the `.env` file.
 
 **Important Notes:**
-- `.env` file is already in `.gitignore` - it will not be committed to version control
+- The `.env` file is already in `.gitignore` and will not be committed to version control
 - For production, set environment variables directly or use a secure secrets management system
 - The application will fail to start if `SECRET_KEY` is not set
-- Both `python wsgi.py` and `docker-compose up` will automatically load `.env` file
 
 **Generate a secure SECRET_KEY:**
+
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
@@ -288,39 +297,47 @@ flask_tutorial/
 ├── app/
 │   ├── __init__.py              # Shared resources (db, cache)
 │   ├── api/
-│   │   └── v1/                  # Versioned controllers (health/tasks/users)
-│   ├── config/                  # Environment-specific config modules
-│   ├── models/                  # SQLAlchemy models
+│   │   └── v1/                  # Versioned API controllers
+│   │       ├── auth.py          # Authentication endpoints
+│   │       ├── health.py        # Health check endpoints
+│   │       ├── tasks.py         # Task endpoints
+│   │       └── users.py         # User endpoints
+│   ├── config/                  # Environment-specific configurations
+│   ├── models/                  # SQLAlchemy database models
 │   ├── services/                # Business logic layer
-│   ├── celery_app.py            # Celery setup
+│   ├── utils/                   # Utility functions
+│   ├── celery_app.py            # Celery application setup
 │   └── connexion_app.py         # Connexion application factory
-├── tests/
-│   ├── conftest.py              # Pytest fixtures (app & client)
-│   ├── test_health.py           # Health endpoint coverage
-│   └── test_users.py            # User workflow coverage
+├── tests/                       # Test suite
+│   ├── conftest.py              # Pytest fixtures
+│   ├── test_auth.py             # Authentication tests
+│   ├── test_health.py           # Health endpoint tests
+│   ├── test_tasks.py            # Task endpoint tests
+│   └── test_users.py            # User endpoint tests
 ├── openapi/
 │   └── openapi.yaml             # OpenAPI 3.0 specification
 ├── migrations/                  # Alembic database migrations
+├── docs/                        # Additional documentation
 ├── wsgi.py                      # Application entry point
-├── Dockerfile                   # Docker 镜像构建文件
-├── docker-compose.yml           # Docker Compose 编排配置
-├── docker-entrypoint.sh         # Docker 容器启动脚本
-├── .dockerignore                # Docker 构建忽略文件
-├── .env.example                 # 环境变量示例文件
-├── pyproject.toml               # Poetry project + dependencies
-├── poetry.lock                  # Locked dependency graph
-└── requirements.txt             # Legacy pin file (optional reference)
+├── Dockerfile                   # Docker image build file
+├── docker-compose.yml           # Docker Compose configuration
+├── docker-entrypoint.sh         # Docker container entrypoint script
+├── .env.example                 # Environment variables example
+├── pyproject.toml               # Poetry project configuration
+└── poetry.lock                  # Locked dependency versions
 ```
 
 ## Technologies
 
-- Flask 2.x
-- Connexion 3.x (OpenAPI/Swagger)
-- Celery 5.x
-- Redis
-- Flask-SQLAlchemy
-- Flask-Caching
-- Alembic
+- **Flask 2.x** - Web framework
+- **Connexion 3.x** - OpenAPI/Swagger framework
+- **Celery 5.x** - Distributed task queue
+- **Redis** - Message broker and cache
+- **Flask-SQLAlchemy** - Database ORM
+- **Flask-Caching** - Caching support
+- **Alembic** - Database migrations
+- **PyJWT** - JWT authentication
+- **Poetry** - Dependency management
 
 ## License
 

@@ -1,0 +1,41 @@
+[flake8]
+# 最大行长度
+max-line-length = 100
+
+# 排除的目录和文件
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .eggs,
+    *.egg,
+    build,
+    dist,
+    migrations,
+    .pytest_cache,
+    .mypy_cache,
+    instance,
+
+# 忽略的错误代码
+# E501: 行长度超过限制（由 max-line-length 控制）
+# W503: 二元运算符前换行（与 W504 冲突，现代风格推荐 W503）
+# E203: 切片冒号前的空格（与 black 格式化工具冲突）
+ignore =
+    E501,  # 行长度（由 max-line-length 控制）
+    W503,  # 二元运算符前换行
+    E203,  # 切片冒号前的空格
+
+# 每行的最大复杂度
+max-complexity = 10
+
+# 统计信息
+statistics = True
+
+# 显示错误代码
+show-source = True
+
+# 要检查的文件扩展名
+filename = *.py
+

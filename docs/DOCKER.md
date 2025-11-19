@@ -5,7 +5,7 @@
 ## 文件结构
 
 ```
-Flask_Celery_POC/
+flask_tutorial/
 ├── Dockerfile              # Docker 镜像构建文件
 ├── docker-compose.yml      # Docker Compose 服务编排配置
 ├── docker-entrypoint.sh    # 容器启动入口脚本

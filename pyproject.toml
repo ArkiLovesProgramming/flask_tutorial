@@ -1,7 +1,7 @@
 [project]
 name = "flask-celery-poc"
 version = "0.1.0"
-description = "Flask + Celery + Redis production-ready app"
+description = "A tutorial project for learning Flask and related technologies"
 authors = [
     {name = "ArkiLovesProgramming",email = "betaweiwang@gmail.com"}
 ]

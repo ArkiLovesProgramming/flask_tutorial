@@ -1,6 +1,6 @@
-# Flask + Celery + Redis POC
+# Flask Tutorial Project
 
-A production-ready Flask application with Celery distributed task queue, Redis broker, and Connexion/Swagger API documentation.
+A tutorial project for learning Flask and related technologies, including Celery distributed task queue, Redis broker, and Connexion/Swagger API documentation.
 
 ## Features
 
@@ -284,7 +284,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 ## Project Structure
 
 ```
-Flask_Celery_POC/
+flask_tutorial/
 ├── app/
 │   ├── __init__.py              # Shared resources (db, cache)
 │   ├── api/
